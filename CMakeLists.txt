@@ -560,7 +560,7 @@ if(CLIENT AND VULKAN)
   show_dependency_status("Vulkan" VULKAN)
 endif()
 
-if(CLIENT AND NOT(CURL_FOUND))
+if(NOT(CURL_FOUND))
   message(SEND_ERROR "You must install Curl to compile DDNet")
 endif()
 if(NOT(PYTHONINTERP_FOUND))
@@ -1669,6 +1669,8 @@ set_src(ENGINE_SHARED GLOB_RECURSE src/engine/shared
   global_uuid_manager.cpp
   huffman.cpp
   huffman.h
+  http.cpp
+  http.h
   image_manipulation.cpp
   image_manipulation.h
   jobs.cpp
@@ -1863,6 +1865,7 @@ if(CLIENT)
     graphics_defines.h
     graphics_threaded.cpp
     graphics_threaded.h
+    graphics_threaded_null.h
     http.cpp
     http.h
     input.cpp
@@ -2097,7 +2100,6 @@ if(CLIENT)
   endif()
 
   target_include_directories(${TARGET_CLIENT} SYSTEM PRIVATE
-    ${CURL_INCLUDE_DIRS}
     ${FREETYPE_INCLUDE_DIRS}
     ${GLEW_INCLUDE_DIRS}
     ${OGG_INCLUDE_DIRS}
@@ -2259,6 +2261,7 @@ if(SERVER)
   # Libraries
   set(LIBS_SERVER
     ${LIBS}
+    ${CURL_LIBRARIES}
     ${MYSQL_LIBRARIES}
     ${TARGET_ANTIBOT}
     ${MINIUPNPC_LIBRARIES}
@@ -2444,8 +2447,6 @@ if(GTEST_FOUND OR DOWNLOAD_GTEST)
   set(TESTS_EXTRA
     src/engine/client/blocklist_driver.cpp
     src/engine/client/blocklist_driver.h
-    src/engine/client/http.cpp
-    src/engine/client/http.h
     src/engine/client/serverbrowser.cpp
     src/engine/client/serverbrowser.h
     src/engine/client/serverbrowser_http.cpp
@@ -2954,7 +2955,7 @@ foreach(target ${TARGETS_OWN})
   target_include_directories(${target} PRIVATE ${PROJECT_BINARY_DIR}/src)
   target_include_directories(${target} PRIVATE src)
   target_compile_definitions(${target} PRIVATE $<$<CONFIG:Debug>:CONF_DEBUG>)
-  target_include_directories(${target} SYSTEM PRIVATE ${SQLite3_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS})
+  target_include_directories(${target} SYSTEM PRIVATE ${CURL_INCLUDE_DIRS} ${SQLite3_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS})
   target_compile_definitions(${target} PRIVATE GLEW_STATIC)
   if(CRYPTO_FOUND)
     target_compile_definitions(${target} PRIVATE CONF_OPENSSL)
