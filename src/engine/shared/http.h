@@ -144,13 +144,33 @@ public:
 
 class CPostJson : public CRequest
 {
-	virtual size_t OnData(char *pData, size_t DataSize) { return DataSize; }
+	virtual size_t OnData(char *pData, size_t DataSize);
 	virtual bool AfterInit(void *pCurl);
+
+	size_t m_BufferSize;
+	size_t m_BufferLength;
+	unsigned char *m_pBuffer;
 
 	char m_aJson[1024];
 
 public:
-	CPostJson(const char *pUrl, CTimeout Timeout, const char *pJson);
+	CPostJson(const char *pUrl, const char *pJson, CTimeout Timeout, HTTPLOG LogProgress, IPRESOLVE IpResolve);
+	~CPostJson();
+
+	size_t ResultSize() const
+	{
+		if(!Result())
+		{
+			return 0;
+		}
+		else
+		{
+			return m_BufferSize;
+		}
+	}
+	unsigned char *Result() const;
+	unsigned char *TakeResult();
+	json_value *ResultJson() const;
 };
 
 bool HttpInit(IStorage *pStorage);

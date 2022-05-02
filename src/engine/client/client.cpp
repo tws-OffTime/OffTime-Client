@@ -44,6 +44,7 @@
 #include <engine/shared/filecollection.h>
 #include <engine/shared/http.h>
 #include <engine/shared/json.h>
+#include <engine/shared/masterserver.h>
 #include <engine/shared/network.h>
 #include <engine/shared/packer.h>
 #include <engine/shared/protocol.h>
@@ -53,8 +54,6 @@
 #include <engine/shared/uuid_manager.h>
 
 #include <game/version.h>
-
-#include <mastersrv/mastersrv.h>
 
 #include <engine/client/demoedit.h>
 #include <engine/client/serverbrowser.h>

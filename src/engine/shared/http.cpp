@@ -212,6 +212,32 @@ bool CHead::AfterInit(void *pCurl)
 	return true;
 }
 
+size_t HttpFeedBuffer(size_t *pBufferSize, size_t *pBufferLength, unsigned char **ppBuffer, char *pData, size_t DataSize)
+{
+	if(DataSize == 0)
+	{
+		return DataSize;
+	}
+	bool Reallocate = false;
+	if(*pBufferSize == 0)
+	{
+		*pBufferSize = 1024;
+		Reallocate = true;
+	}
+	while(*pBufferLength + DataSize > *pBufferSize)
+	{
+		*pBufferSize *= 2;
+		Reallocate = true;
+	}
+	if(Reallocate)
+	{
+		*ppBuffer = (unsigned char *)realloc(*ppBuffer, *pBufferSize);
+	}
+	mem_copy(*ppBuffer + *pBufferLength, pData, DataSize);
+	*pBufferLength += DataSize;
+	return DataSize;
+}
+
 CGet::CGet(const char *pUrl, CTimeout Timeout, HTTPLOG LogProgress) :
 	CRequest(pUrl, Timeout, LogProgress),
 	m_BufferSize(0),
@@ -261,28 +287,7 @@ json_value *CGet::ResultJson() const
 
 size_t CGet::OnData(char *pData, size_t DataSize)
 {
-	if(DataSize == 0)
-	{
-		return DataSize;
-	}
-	bool Reallocate = false;
-	if(m_BufferSize == 0)
-	{
-		m_BufferSize = 1024;
-		Reallocate = true;
-	}
-	while(m_BufferLength + DataSize > m_BufferSize)
-	{
-		m_BufferSize *= 2;
-		Reallocate = true;
-	}
-	if(Reallocate)
-	{
-		m_pBuffer = (unsigned char *)realloc(m_pBuffer, m_BufferSize);
-	}
-	mem_copy(m_pBuffer + m_BufferLength, pData, DataSize);
-	m_BufferLength += DataSize;
-	return DataSize;
+	return HttpFeedBuffer(&m_BufferSize, &m_BufferLength, &m_pBuffer, pData, DataSize);
 }
 
 CGetFile::CGetFile(IStorage *pStorage, const char *pUrl, const char *pDest, int StorageType, CTimeout Timeout, HTTPLOG LogProgress, IPRESOLVE IpResolve) :
@@ -337,8 +342,11 @@ int CGetFile::OnCompletion(int State)
 	return State;
 }
 
-CPostJson::CPostJson(const char *pUrl, CTimeout Timeout, const char *pJson) :
-	CRequest(pUrl, Timeout)
+CPostJson::CPostJson(const char *pUrl, const char *pJson, CTimeout Timeout, HTTPLOG LogProgress, IPRESOLVE IpResolve) :
+	CRequest(pUrl, Timeout, LogProgress, IpResolve),
+	m_BufferSize(0),
+	m_BufferLength(0),
+	m_pBuffer(NULL)
 {
 	str_copy(m_aJson, pJson, sizeof(m_aJson));
 }
@@ -353,4 +361,48 @@ bool CPostJson::AfterInit(void *pCurl)
 	curl_easy_setopt(pHandle, CURLOPT_POSTFIELDS, m_aJson);
 
 	return true;
+}
+
+CPostJson::~CPostJson()
+{
+	m_BufferSize = 0;
+	m_BufferLength = 0;
+	free(m_pBuffer);
+	m_pBuffer = NULL;
+}
+
+unsigned char *CPostJson::Result() const
+{
+	if(State() != HTTP_DONE)
+	{
+		return NULL;
+	}
+	return m_pBuffer;
+}
+
+unsigned char *CPostJson::TakeResult()
+{
+	unsigned char *pResult = Result();
+	if(pResult)
+	{
+		m_BufferSize = 0;
+		m_BufferLength = 0;
+		m_pBuffer = NULL;
+	}
+	return pResult;
+}
+
+json_value *CPostJson::ResultJson() const
+{
+	unsigned char *pResult = Result();
+	if(!pResult)
+	{
+		return NULL;
+	}
+	return json_parse((char *)pResult, m_BufferLength);
+}
+
+size_t CPostJson::OnData(char *pData, size_t DataSize)
+{
+	return HttpFeedBuffer(&m_BufferSize, &m_BufferLength, &m_pBuffer, pData, DataSize);
 }
