@@ -153,6 +153,8 @@ class CPostJson : public CRequest
 
 	char m_aJson[1024];
 
+	void *m_pList;
+
 public:
 	CPostJson(const char *pUrl, const char *pJson, CTimeout Timeout, HTTPLOG LogProgress, IPRESOLVE IpResolve);
 	~CPostJson();

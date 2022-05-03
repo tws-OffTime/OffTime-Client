@@ -359,6 +359,7 @@ bool CPostJson::AfterInit(void *pCurl)
 	pHeaders = curl_slist_append(pHeaders, "Content-Type: application/json");
 	curl_easy_setopt(pHandle, CURLOPT_HTTPHEADER, pHeaders);
 	curl_easy_setopt(pHandle, CURLOPT_POSTFIELDS, m_aJson);
+	m_pList = pHeaders;
 
 	return true;
 }
@@ -369,6 +370,8 @@ CPostJson::~CPostJson()
 	m_BufferLength = 0;
 	free(m_pBuffer);
 	m_pBuffer = NULL;
+	curl_slist_free_all((curl_slist *)m_pList);
+	m_pList = NULL;
 }
 
 unsigned char *CPostJson::Result() const
