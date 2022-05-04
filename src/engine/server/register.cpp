@@ -65,6 +65,7 @@ class CRegister : public IRegister
 
 			std::shared_ptr<CGlobal> m_pGlobal;
 			LOCK m_Lock = lock_create();
+			bool m_Registered GUARDED_BY(m_Lock) = false;
 			int m_LatestResponseStatus GUARDED_BY(m_Lock) = STATUS_NONE;
 			int m_LatestResponseIndex GUARDED_BY(m_Lock) = -1;
 		};
@@ -308,7 +309,12 @@ void CRegister::CProtocol::SendRegister()
 
 	std::unique_ptr<CPostJson> pRegister = std::make_unique<CPostJson>(m_pParent->m_pConfig->m_SvRegisterUrl, aJson, CTimeout{0, 0, 0}, HTTPLOG::FAILURE, ProtocolToIpresolve(m_Protocol));
 
-	log_debug(ProtocolToSystem(m_Protocol), "registering...");
+	lock_wait(m_pShared->m_Lock);
+	if(!m_pShared->m_Registered)
+	{
+		log_info(ProtocolToSystem(m_Protocol), "registering...");
+	}
+	lock_unlock(m_pShared->m_Lock);
 	m_pParent->m_pEngine->AddJob(std::make_shared<CJob>(m_Protocol, m_NumTotalRequests, InfoSerial, m_pShared, std::move(pRegister)));
 	m_NewChallengeToken = false;
 	m_NumTotalRequests += 1;
@@ -340,6 +346,12 @@ void CRegister::CProtocol::CheckChallengeStatus()
 
 void CRegister::CProtocol::Update()
 {
+	lock_wait(m_pShared->m_Lock);
+	if(m_pShared->m_LatestResponseIndex == m_NumTotalRequests - 1)
+	{
+		m_pShared->m_Registered = m_pShared->m_LatestResponseStatus == STATUS_OK;
+	}
+	lock_unlock(m_pShared->m_Lock);
 	CheckChallengeStatus();
 	if(time_get() >= m_NextRegister)
 	{
@@ -391,9 +403,12 @@ void CRegister::CProtocol::CJob::Run()
 		json_value_free(pJson);
 		return;
 	}
-	log_debug(ProtocolToSystem(m_Protocol), "status: %s", (const char *)StatusString);
-	json_value_free(pJson);
 	lock_wait(m_pShared->m_Lock);
+	if(Status != STATUS_OK || !m_pShared->m_Registered)
+	{
+		log_debug(ProtocolToSystem(m_Protocol), "status: %s", (const char *)StatusString);
+	}
+	json_value_free(pJson);
 	if(m_Index > m_pShared->m_LatestResponseIndex)
 	{
 		m_pShared->m_LatestResponseIndex = m_Index;
