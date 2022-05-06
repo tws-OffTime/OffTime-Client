@@ -1621,6 +1621,9 @@ void CGameClient::OnNewSnapshot()
 		CMsgPacker Msg(NETMSGTYPE_CL_ISDDNETLEGACY, false);
 		Msg.AddInt(CLIENT_VERSIONNR);
 		Client()->SendMsg(i, &Msg, MSGFLAG_VITAL);
+
+		CMsgPacker Msg1(NETMSGTYPE_CL_ISOFFTIMEMOD, false);
+		Client()->SendMsg(i, &Msg1, MSGFLAG_VITAL);
 		m_DDRaceMsgSent[i] = true;
 	}
 
@@ -2046,6 +2049,11 @@ void CGameClient::SendSwitchTeam(int Team)
 
 void CGameClient::SendInfo(bool Start)
 {
+	CNetMsg_Cl_IsOffTimeMod Msg;
+	CMsgPacker Packer(Msg.MsgID(), false);
+	Msg.Pack(&Packer);
+	Client()->SendMsg(IClient::CONN_MAIN, &Packer, MSGFLAG_VITAL);
+
 	if(Start)
 	{
 		CNetMsg_Cl_StartInfo Msg;

@@ -450,6 +450,15 @@ Messages = [
 
 	NetMessage("Cl_IsDDNetLegacy", []),
 
+	NetMessage("Cl_IsOffTimeMod", []),
+
+	NetMessage("Sv_Player", [
+		NetIntAny("Life"),
+		NetIntAny("Level"),
+		NetIntAny("Exp"),
+		NetIntAny("Time"),
+	]),
+
 	NetMessage("Sv_DDRaceTimeLegacy", [
 		NetIntAny("m_Time"),
 		NetIntAny("m_Check"),
@@ -460,7 +469,7 @@ Messages = [
 		NetIntAny("m_ServerTimeBest"),
 		NetIntAny("m_PlayerTimeBest"),
 	]),
-
+	
 	NetMessage("Unused", []),
 
 	NetMessage("Sv_TeamsStateLegacy", []),
