@@ -95,6 +95,8 @@ bool IsCity(const CServerInfo *pInfo);
 bool Is64Player(const CServerInfo *pInfo);
 bool IsPlus(const CServerInfo *pInfo);
 
+bool IsOfftime(const CServerInfo *pInfo);
+
 class IServerBrowser : public IInterface
 {
 	MACRO_INTERFACE("serverbrowser", 0)

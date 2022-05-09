@@ -682,6 +682,7 @@ void CGameClient::OnRelease()
 
 void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, int Conn, bool Dummy)
 {
+	m_IsOnTimeServer = false;
 	// special messages
 	if(MsgId == NETMSGTYPE_SV_TUNEPARAMS)
 	{
@@ -812,6 +813,11 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, int Conn, bool Dumm
 			m_GameWorld.ReleaseHooked(pMsg->m_Victim);
 		}
 	}
+	else if (MsgId == NETMSGTYPE_CL_ISOFFTIMEMOD)
+	{
+		m_IsOnTimeServer = true;
+	}
+	
 }
 
 void CGameClient::OnStateChange(int NewState, int OldState)
@@ -973,6 +979,7 @@ static CGameInfo GetGameInfo(const CNetObj_GameInfoEx *pInfoEx, int InfoExSize, 
 	bool Vanilla;
 	bool Plus;
 	bool FDDrace;
+	bool OffTime = IsOfftime(pFallbackServerInfo);
 	if(Version < 1)
 	{
 		Race = IsRace(pFallbackServerInfo);
@@ -1032,6 +1039,7 @@ static CGameInfo GetGameInfo(const CNetObj_GameInfoEx *pInfoEx, int InfoExSize, 
 	Info.m_DontMaskEntities = !DDNet;
 	Info.m_AllowXSkins = false;
 	Info.m_EntitiesFDDrace = FDDrace;
+	Info.m_OffTime = OffTime;
 
 	if(Version >= 0)
 	{

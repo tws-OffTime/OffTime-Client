@@ -26,6 +26,11 @@ GameInfoFlags = [
 GameInfoFlags2 = [
 	"ALLOW_X_SKINS", "GAMETYPE_CITY", "GAMETYPE_FDDRACE", "ENTITIES_FDDRACE",
 ]
+
+OffTimeFlags = [
+	"GAMETYPE_OFFTIME",
+]
+
 ExPlayerFlags = ["AFK", "PAUSED", "SPEC"]
 ProjectileFlags = ["CLIENTID_BIT{}".format(i) for i in range(8)] + [
 	"NO_OWNER", "IS_DDNET", "BOUNCE_HORIZONTAL", "BOUNCE_VERTICAL",
@@ -455,8 +460,11 @@ Messages = [
 	NetMessage("Sv_Player", [
 		NetIntAny("Life"),
 		NetIntAny("Level"),
-		NetIntAny("Exp"),
-		NetIntAny("Time"),
+		NetIntAny("Chapter"),
+	]),
+
+	NetMessage("Sv_Dialog", [
+		NetIntAny("ID"),
 	]),
 
 	NetMessage("Sv_DDRaceTimeLegacy", [

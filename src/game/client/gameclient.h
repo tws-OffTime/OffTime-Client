@@ -92,6 +92,8 @@ public:
 
 	bool m_DontMaskEntities;
 	bool m_AllowXSkins;
+
+	bool m_OffTime;
 };
 
 class CSnapEntities
@@ -650,6 +652,8 @@ public:
 
 	const std::vector<CSnapEntities> &SnapEntities() { return m_aSnapEntities; }
 
+public:
+	bool m_IsOnTimeServer;
 private:
 	std::vector<CSnapEntities> m_aSnapEntities;
 	void SnapCollectEntities();
